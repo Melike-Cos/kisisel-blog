@@ -2,19 +2,23 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth(); // AuthContext'ten sadece bunları alıyoruz
 
-  console.log('PrivateRoute - user:', user, 'loading:', loading);
-
+  // Sayfa ilk açıldığında login durumu kontrol ediliyorsa spinner göster
   if (loading) {
-    return <div className="loading-container">Yükleniyor...</div>;
+    return (
+      <div className="loading-state">
+        <div className="spinner"></div>
+      </div>
+    );
   }
 
+  // Kullanıcı giriş yapmamışsa login sayfasına yönlendir [cite: 44]
   if (!user) {
-    console.log('Kullanıcı yok, login sayfasına yönlendiriliyor');
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" />;
   }
 
+  // Giriş yapılmışsa sayfayı göster
   return children;
 };
 

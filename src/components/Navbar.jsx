@@ -13,50 +13,29 @@ const Navbar = () => {
     setMenuOpen(false);
   };
 
-  const closeMenu = () => {
-    setMenuOpen(false);
-  };
-
   return (
     <nav className="navbar">
       <div className="nav-container">
-        <Link to="/" className="nav-logo" onClick={closeMenu}>
-          👨‍💻 Kodumun Dünyası
+        <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
+          👨‍💻 Kodun Dünyası
         </Link>
         
-        <div 
-          className={`hamburger-menu ${menuOpen ? 'active' : ''}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        
         <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
-          <Link to="/" className="nav-link" onClick={closeMenu}>
-            Ana Sayfa
-          </Link>
+          <Link to="/" className="nav-link">Ana Sayfa</Link>
           
+          {/* Sadece Giriş Yapılmışsa Yeni Yazı butonu çıksın */}
           {user && isAdmin() && (
-            <Link to="/add-post" className="nav-link" onClick={closeMenu}>
-              ✍️ Yeni Yazı
-            </Link>
+            <Link to="/add-post" className="nav-link">✍️ Yeni Yazı</Link>
           )}
           
+          {/* MANTIK BURADA: Kullanıcı varsa Hoşgeldin, yoksa Giriş Yap */}
           {user ? (
             <>
-              <span className="nav-user">
-                👋 Hoşgeldin, Admin
-              </span>
-              <button onClick={handleLogout} className="nav-logout">
-                Çıkış Yap
-              </button>
+              <span className="nav-user">👋 Hoşgeldin, {user.name || 'Admin'}</span>
+              <button onClick={handleLogout} className="nav-logout">Çıkış Yap</button>
             </>
           ) : (
-            <Link to="/login" className="nav-link" onClick={closeMenu}>
-              Giriş Yap
-            </Link>
+            <Link to="/login" className="nav-link">Giriş Yap</Link>
           )}
         </div>
       </div>

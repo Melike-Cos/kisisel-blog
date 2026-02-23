@@ -1,35 +1,29 @@
 import { useState, useEffect } from 'react';
-import { getPosts } from '../api/blogAPI';
+import { getPosts } from '../api/blogService';
 import PostCard from '../components/PostCard';
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null);   // ✅ EKLENDİ
 
   useEffect(() => {
-    loadPosts();
+    loadPosts({ pageNumber: 1, pageSize: 12 });
   }, []);
 
-  const loadPosts = async () => {
+  const loadPosts = async (params = { pageNumber: 1, pageSize: 12 }) => {
     try {
       setLoading(true);
-      const data = await getPosts();
-      console.log('HomePage gelen veri:', data);
-      
-      if (Array.isArray(data)) {
-        setPosts(data);
-      } else {
-        setPosts([]);
-      }
-      
+      setError(null);                          // ✅ EKLENDİ
+      const data = await getPosts(params);
+      setPosts(data);
     } catch (err) {
       console.error('Hata:', err);
-      setError('Yazılar yüklenirken hata oluştu');
+      setError("Veriler yüklenemedi.");        // ✅ EKLENDİ
     } finally {
       setLoading(false);
     }
-  };
+  };    
 
   if (loading) {
     return (
@@ -44,7 +38,10 @@ const HomePage = () => {
     return (
       <div className="error-container">
         <p className="error-message">{error}</p>
-        <button onClick={loadPosts} className="retry-button">
+        <button
+          onClick={() => loadPosts({ pageNumber: 1, pageSize: 12 })}
+          className="retry-button"
+        >
           Tekrar Dene
         </button>
       </div>
@@ -54,7 +51,7 @@ const HomePage = () => {
   return (
     <div className="home-page">
       <h1>Blog Yazıları</h1>
-      
+
       {posts.length === 0 ? (
         <p className="no-posts">Henüz hiç blog yazısı yok.</p>
       ) : (

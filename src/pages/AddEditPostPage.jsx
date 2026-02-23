@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { createPost, updatePost, getPostById } from '../api/blogAPI';
+// DEĞİŞİKLİK: Servis yapısına geçiş
+import * as blogService from '../api/blogService'; 
 import { useAuth } from '../context/AuthContext';
 
 const AddEditPostPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const isEditMode = !!id;
 
   const [title, setTitle] = useState('');
@@ -17,90 +17,64 @@ const AddEditPostPage = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isEditMode) {
-      loadPost();
-    }
+    if (isEditMode) loadPost();
   }, [id]);
 
   const loadPost = async () => {
     try {
       setFetchLoading(true);
-      const data = await getPostById(id);
-      console.log('Düzenlenecek yazı:', data);
-      
+      const data = await blogService.getPostById(id);
       setTitle(data.name || data.title || '');
       setContent(data.description || data.content || '');
       setImageUrl(data.imageUrl || '');
-      
     } catch (err) {
       setError('Yazı yüklenirken hata oluştu');
-      console.error('Hata:', err);
     } finally {
       setFetchLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
+ // AddEditPostPage.jsx içindeki handleSubmit fonksiyonunu bu şekilde güncelle:
 
-  if (!title.trim() || !content.trim()) {
-    setError('Başlık ve içerik zorunludur');
-    return;
-  }
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) {
+      setError('Başlık ve içerik zorunludur');
+      return;
+    }
 
-  // API'nin beklediği FORMAT - Price 0'dan büyük olmalı!
-  const postData = {
-    name: title,
-    description: content,
-    price: 1.99,                    // 0'dan büyük herhangi bir sayı
-    stockQuantity: 1,
-    categoryId: 10, // Office Supplies kategorisi
-    imageUrl: imageUrl || 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800'
+    const postData = {
+      name: title,
+      description: content,
+      price: 1.99,
+      stockQuantity: 1,
+      categoryId: 10,
+      imageUrl: imageUrl || 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800'
+    };
+
+    try {
+      setLoading(true);
+      if (isEditMode) {
+        // Güncelleme işlemi
+        await blogService.updatePost(id, postData);
+      } else {
+        // Yeni yazı ekleme işlemi
+        await blogService.createPost(postData);
+      }
+      
+      // İşlem başarılı olduğunda yazı çıkarmadan doğrudan ana sayfaya yönlendir
+      navigate('/'); 
+      
+    } catch (err) {
+      setError(err.response?.status === 401 ? 'Oturum süreniz doldu' : 'Bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  try {
-    setLoading(true);
-    setError('');
-
-    console.log('🚀 Gönderilen veri:', postData);
-
-    let result;
-    if (isEditMode) {
-      result = await updatePost(id, postData);
-      console.log('✅ Yazı güncellendi:', result);
-    } else {
-      result = await createPost(postData);
-      console.log('✅ Yazı eklendi:', result);
-    }
-
-    // Başarılı -> ana sayfaya git
-    navigate('/');
-    
-  } catch (err) {
-    console.error('❌ Hata:', err);
-    
-    if (err.message.includes('Oturum')) {
-      setError('Oturum süreniz doldu. Tekrar giriş yapın...');
-      setTimeout(() => navigate('/login'), 2000);
-    } else {
-      setError('Bir hata oluştu: ' + err.message);
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
-  if (fetchLoading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Yazı yükleniyor...</p>
-      </div>
-    );
-  }
+  if (fetchLoading) return <div className="loading-container"><div className="spinner"></div><p>Yükleniyor...</p></div>;
 
   return (
-    <div className="add-edit-page">
+   <div className="add-edit-page">
       <div className="add-edit-container">
         <div className="add-edit-header">
           <h1>
@@ -181,14 +155,6 @@ const AddEditPostPage = () => {
             )}
           </div>
 
-          <div className="form-info">
-            <div className="info-icon">ℹ️</div>
-            <div className="info-text">
-              <strong>📌 Yazılım Temalı Blog</strong>
-              <p>Tüm yazılar "Office Supplies" kategorisinde yayınlanır (API kısıtı).</p>
-            </div>
-          </div>
-
           <div className="form-actions">
             <button 
               type="button" 
@@ -216,4 +182,4 @@ const AddEditPostPage = () => {
   );
 };
 
-export default AddEditPostPage; 
+export default AddEditPostPage;
